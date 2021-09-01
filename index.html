@@ -1,0 +1,133 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>timer-screenshot / タイマースクリーンショット</title>
+<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+<style>
+h1 {
+  margin-bottom: 0em;
+  padding-bottom: 0;
+}
+.h1b {
+  font-size: 120%;
+  padding-top: 0;
+  margin-top: 0;
+  margin-bottom: 2em;
+}
+</style>
+</head>
+<body>
+<h1>timer-screenshot</h1>
+<div class="h1b">タイマースクリーンショット</div>
+
+<video style="float:right; border:1px solid gray; margin-left:1em;" id="videoin" width="320px" height="180px"></video>
+<!--
+<label><input type="checkbox" id="chkmouse">with cursor</label>
+-->
+
+1. <button id="btnprepare">画面キャプチャーを準備する</button><br>
+2. カウントダウン <select id=countdown>
+  <option value=10>10秒</option>
+  <option value=5>5秒</option>
+  <option value=3 selected>3秒</option>
+  <option value=1>1秒</option>
+  <option value=0>即時</option>
+</select><br>
+3. 撮影する枚数 <select id=ncapture>
+  <option>10</option>
+  <option>5</option>
+  <option selected>3</option>
+  <option>2</option>
+  <option>1</option>
+</select><br>
+4. 撮影間隔 <select id=delaycapture>
+  <option value=1000>1000msec</option>
+  <option value=500>500msec</option>
+  <option value=300>300msec</option>
+  <option value=200>200msec</option>
+  <option value=100 selected>100mesc</option>
+</select><br>
+5. <button id="btncapture" disabled>画面キャプチャー</button><br>
+
+<div id=message style="margin:1em 0;"></div>
+
+<script type="module">
+import { css } from "https://js.sabae.cc/stdom.js";
+import { Base64 } from "https://code4fukui.github.io/Base64/Base64.js";
+import { sleep } from "https://js.sabae.cc/sleep.js";
+import { fix0 } from "https://js.sabae.cc/fix0.js";
+import { downloadZip } from "https://code4sabae.github.io/js/downloadZip.js";
+
+//css();
+
+const downloadJPEG = (fn, canvas) => {
+  const link = document.createElement("a");
+  const dataurl = canvas.toDataURL("image/jpeg", 0.9);
+  link.href = dataurl;
+  link.download = fn;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
+const canvas2jpeg = (canvas) => {
+  const dataurl = canvas.toDataURL("image/jpeg", 0.9);
+  console.log(dataurl);
+  const bin = Base64.decode(dataurl.substring(dataurl.indexOf(",") + 1));
+  return bin;
+};
+
+const video2canvas = (video) => {
+  const settings = video.srcObject.getVideoTracks()[0].getSettings();
+  const canvas = document.createElement("canvas");
+  canvas.width = settings.width;
+  canvas.height = settings.height;
+  canvas.style.width = canvas.width;
+  canvas.style.height = canvas.height;
+  const g = canvas.getContext("2d");
+  g.drawImage(video, 0, 0);
+  return canvas;
+};
+
+btnprepare.onclick = async () => {
+  const cursor = "never"; // chkmouse.checked ? "always" : "never"; // always, never, motion ... 効かない
+  videoin.srcObject = await navigator.mediaDevices.getDisplayMedia({ video: { cursor }, audio: false });
+  await videoin.play();
+  console.log(videoin.srcObject.getVideoTracks());
+  
+  btncapture.disabled = false;
+  btncapture.onclick = async () => {
+    if (countdown.value) {
+      message.textContent = "撮影カウントダウン！";
+      for (let i = countdown.value; i >= 1; i--) {
+        message.innerHTML = "撮影カウントダウン！<br>" + i;
+        await sleep(1000);
+      }
+    }
+    const delay = delaycapture.value;
+    let cnt = ncapture.value;
+    if (cnt == 1) {
+      message.innerHTML = "撮影します！";
+      const canvas = video2canvas(videoin);
+      downloadJPEG("ss.jpg", canvas);
+    } else {
+      message.innerHTML = cnt + "枚、撮影します！";
+      const files = [];
+      for (let i = 0; i < cnt; i++) {
+        const canvas = video2canvas(videoin);
+        const jpg = canvas2jpeg(canvas);
+        files.push({ name: `ss${fix0(i, 3)}.jpg`, data: jpg });
+        if (i < cnt - 1) {
+          await sleep(delay);
+        }
+      }
+      await downloadZip("ss.zip", files);
+    }
+  };
+};
+
+onload = () => {
+  message.textContent = "準備をしてください";
+};
+</script>
+<hr>
+<a href=https://fukuno.jig.jp/3325>App: CC BY @taisukef</a><br>
+<a href=https://github.com/taisukef/timer-screenshot/>src on GitHub</a><br>
