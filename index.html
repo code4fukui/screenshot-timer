@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>timer-screenshot / タイマースクリーンショット</title>
+<title>screenshot-timer / スクショタイマー</title>
 <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
 <style>
 h1 {
@@ -15,8 +15,8 @@ h1 {
 </style>
 </head>
 <body>
-<h1>timer-screenshot</h1>
-<div class="h1b">タイマースクリーンショット</div>
+<h1>screenshot-timer</h1>
+<div class="h1b">スクショタイマー</div>
 
 <video style="float:right; border:1px solid gray; margin-left:1em;" id="videoin" width="320px" height="180px"></video>
 <!--
@@ -58,6 +58,7 @@ import { Base64 } from "https://code4fukui.github.io/Base64/Base64.js";
 import { sleep } from "https://js.sabae.cc/sleep.js";
 import { fix0 } from "https://js.sabae.cc/fix0.js";
 import { downloadZip } from "https://code4sabae.github.io/js/downloadZip.js";
+import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
 
 //css();
 
@@ -90,40 +91,65 @@ const video2canvas = (video) => {
   return canvas;
 };
 
+class Sound {
+  constructor(src) {
+    this.audio = new Audio(src);
+  }
+  play() {
+    this.audio.currentTime = 0;
+    this.audio.play();
+  }
+};
+
+const getFilenameNow = () => {
+  const dt = new DateTime();
+  return dt.day.toString().replace(/-/g, "") + "-" + dt.time.toString().replace(/[:\.]/g, "");
+};
+
 btnprepare.onclick = async () => {
   const cursor = "never"; // chkmouse.checked ? "always" : "never"; // always, never, motion ... 効かない
   videoin.srcObject = await navigator.mediaDevices.getDisplayMedia({ video: { cursor }, audio: false });
   await videoin.play();
   console.log(videoin.srcObject.getVideoTracks());
+
+  const sndCountdown = new Sound("sound/countdown.mp3");
+  const sndShutter = new Sound("sound/shutter.mp3");
   
   btncapture.disabled = false;
   btncapture.onclick = async () => {
+    btncapture.disabled = true;
     if (countdown.value) {
       message.textContent = "撮影カウントダウン！";
       for (let i = countdown.value; i >= 1; i--) {
         message.innerHTML = "撮影カウントダウン！<br>" + i;
+        sndCountdown.play();
         await sleep(1000);
       }
     }
     const delay = delaycapture.value;
     let cnt = ncapture.value;
     if (cnt == 1) {
-      message.innerHTML = "撮影します！";
+      message.innerHTML = "撮影！";
+      sndShutter.play();
       const canvas = video2canvas(videoin);
       downloadJPEG("ss.jpg", canvas);
     } else {
-      message.innerHTML = cnt + "枚、撮影します！";
       const files = [];
       for (let i = 0; i < cnt; i++) {
+        message.innerHTML = cnt + "枚中" + (i + 1) + "枚目の撮影！";
+        sndShutter.play();
         const canvas = video2canvas(videoin);
         const jpg = canvas2jpeg(canvas);
-        files.push({ name: `ss${fix0(i, 3)}.jpg`, data: jpg });
+        //const name = `ss${fix0(i, 3)}.jpg`
+        const name = "ss-" + getFilenameNow() + ".jpg";
+        files.push({ name, data: jpg });
         if (i < cnt - 1) {
           await sleep(delay);
         }
       }
       await downloadZip("ss.zip", files);
     }
+    btncapture.disabled = false;
   };
 };
 
@@ -132,5 +158,6 @@ onload = () => {
 };
 </script>
 <hr>
+<a href=https://soundeffect-lab.info/>Sound: 効果音ラボ</a><br>
 <a href=https://fukuno.jig.jp/3325>App: CC BY @taisukef</a><br>
 <a href=https://github.com/taisukef/timer-screenshot/>src on GitHub</a><br>
