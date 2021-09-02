@@ -50,7 +50,7 @@ h1 {
 </select><br>
 5. <button id="btncapture" disabled>画面キャプチャー</button><br>
 
-<div id=message style="margin:1em 0;"></div>
+<div id=message style="margin:1em 0;">準備をしてください</div>
 
 <script type="module">
 import { css } from "https://js.sabae.cc/stdom.js";
@@ -59,6 +59,7 @@ import { sleep } from "https://js.sabae.cc/sleep.js";
 import { fix0 } from "https://js.sabae.cc/fix0.js";
 import { downloadZip } from "https://code4sabae.github.io/js/downloadZip.js";
 import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
+import { Sound } from "https://js.sabae.cc/Sound.js";
 
 //css();
 
@@ -89,16 +90,6 @@ const video2canvas = (video) => {
   const g = canvas.getContext("2d");
   g.drawImage(video, 0, 0);
   return canvas;
-};
-
-class Sound {
-  constructor(src) {
-    this.audio = new Audio(src);
-  }
-  play() {
-    this.audio.currentTime = 0;
-    this.audio.play();
-  }
 };
 
 const getFilenameNow = () => {
@@ -152,12 +143,9 @@ btnprepare.onclick = async () => {
     btncapture.disabled = false;
   };
 };
-
-onload = () => {
-  message.textContent = "準備をしてください";
-};
 </script>
+
 <hr>
 <a href=https://soundeffect-lab.info/>Sound: 効果音ラボ</a><br>
-<a href=https://fukuno.jig.jp/3325>App: CC BY @taisukef</a><br>
-<a href=https://github.com/taisukef/timer-screenshot/>src on GitHub</a><br>
+<a href=https://fukuno.jig.jp/3326>App: CC BY @taisukef</a><br>
+<a href=https://github.com/code4fukui/screenshot-timer/>src on GitHub</a><br>
