@@ -2,5 +2,5 @@
 
 タイマーでスクショが撮れます
 
-https://code4fukui.github.io/timer-screenshot/
+https://code4fukui.github.io/screenshot-timer/
 
